@@ -2,28 +2,19 @@ local _, Util = ...
 
 SavedVars = {}
 
+
 local Init = CreateFrame("Frame")
 
 Init:RegisterEvent("ADDON_LOADED")
 
 Init:SetScript("OnEvent", function(self, event, addon)
-	if addon == "ItemProcs" then
+	if addon == "PassiveTimers" then
 		print ("PassiveTimers v1.0 loaded type /icd to start")
 		for key, value in pairs(SavedVars) do
 			Util.Tracker(SavedVars[key])
 		end
 	end
 end)
-
-SlashCmdList["TRACKERTOGGLE"] = function(msg)
-	if TrackerConfig:IsVisible() == false then
-		TrackerConfig:Show()
-	else 
-		TrackerConfig:Hide()
-	end
-end
-
-SLASH_TRACKERTOGGLE1 = "/icd"
 
 
 local TrackerConfig = CreateFrame("Frame", "TrackerConfig", UIParent, "BackdropTemplate")
@@ -68,10 +59,10 @@ DragDropTexture:SetTexture("Interface/PaperDoll/UI-PaperDoll-Slot-Trinket")
 DragDropField:SetScript("OnClick", function(self, event, ...)
 	local _, itemId, itemName, _, _ = GetCursorInfo()
 	if itemId == nil then
+		DragDropTexture:SetTexture("Interface/PaperDoll/UI-PaperDoll-Slot-Trinket")
 		Util.State.texture = nil;
 		Util.State.itemId = nil;
 		Util.State.itemName = nil
-		DragDropTexture:SetTexture("Interface/PaperDoll/UI-PaperDoll-Slot-Trinket")
 	end
 	if itemId ~= nil then
 		DragDropTexture:SetTexture(GetItemIcon(itemId));
@@ -79,6 +70,7 @@ DragDropField:SetScript("OnClick", function(self, event, ...)
 		Util.State.itemId = itemId;
 		Util.State.itemName = Util.ParseHyperLink(itemName)
 	end
+	ClearCursor()
 end)
 
 local CreateTracker = CreateFrame("Button", "CreateTracker", TrackerConfig, "GameMenuButtonTemplate")
@@ -100,9 +92,9 @@ CreateTracker:SetScript("OnClick", function(self, event, ...)
 
 	SavedVars[Util.State.itemId] = Util.State
 
-	TrackerConfig:Hide()
 	Util.Tracker(Util.State)
 	Util.State = {}
+	TrackerConfig:Hide()
 end)
 CreateTracker:Hide()
 
@@ -110,27 +102,33 @@ local CombatLogListener = CreateFrame("Frame")
 
 CombatLogListener:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
 
-CombatLogListener:SetScript("OnEvent", function(self, event, ...) 
+CombatLogListener:SetScript("OnEvent", function(self, event, ...)
+	local unitName = UnitName("player")
     local timeStamp, eventType, _, _, playerName, _, _, _, _, _, _, _, itemName, _, buffType, _, _ = CombatLogGetCurrentEventInfo()
-	if eventType == "SPELL_AURA_APPLIED" and playerName == "Intimod" then
-		print(timeStamp, eventType, playerName, itemName, buffType)
-		for key, value in pairs(SavedVars) do 
-			-- print(key, value)
-		end
-	end
-	if eventType == "SPELL_DAMAGE" and playerName == "Intimod" then 
-		print(timeStamp, eventType, playerName, itemName, buffType)
-		for key, value in pairs(SavedVars) do
-			if SavedVars[key].itemName == itemName then
-				TrackerFrame:StartCooldown(SavedVars[key].itemId)
+	local children = { TrackerLayer:GetChildren() }
+
+	if eventType == "SPELL_AURA_APPLIED" and playerName == unitName then
+		for _, item in pairs(SavedVars) do
+			if item.auraName == itemName then
+				for i, child in ipairs(children) do
+					if child:GetName() == tostring(item.itemId) then
+						child:StartCooldown(item.itemId)
+					end
+				end 
 			end
-			print(
-				key, value,
-				SavedVars[key].itemId,
-				SavedVars[key].type, 
-				SavedVars[key].itemName,
-				SavedVars[key].itemName == itemName
-			)
 		end
 	end
+
+	if eventType == "SPELL_DAMAGE" and playerName == unitName then 
+		for _, item in pairs(SavedVars) do
+			if item.itemName == itemName then
+				for i, child in ipairs(children) do
+					if child:GetName() == tostring(item.itemId) then
+						child:StartCooldown(item.itemId)
+					end
+				end 
+			end
+		end
+	end
+
 end)

@@ -1,13 +1,31 @@
 local _, Util = ...
 
-local function Tracker (fields)
+local TrackerLayer = CreateFrame("Frame", "TrackerLayer", UIParent)
+TrackerLayer:SetPoint("CENTER")
+TrackerLayer:SetSize(UIParent:GetWidth(), UIParent:GetHeight())
 
-    local TrackerFrame = CreateFrame("Frame", "TrackerFrame", UIParent, "BackdropTemplate")
+
+local function Tracker (fields)
+    local TrackerFrame = CreateFrame("Frame", fields.itemId, TrackerLayer, "BackdropTemplate")
+    local TimerText = TrackerFrame:CreateFontString(nil, "OVERLAY", "GameTooltipText")
+    TimerText:SetPoint("CENTER", -2, -2)
+    TimerText:SetFont("Fonts\\FRIZQT__.TTF", 30, "OUTLINE, MONOCHROME")
 
     function TrackerFrame:StartCooldown(itemId)
-        if itemId == fields.itemId then
-            TrackerFrame:SetAlpha(0.5)
+            if itemId == fields.itemId then
+            local icdDuration = tonumber(fields.internalCooldown);
+            TimerText:SetText(icdDuration)
+            TrackerFrame:SetAlpha(0.35)
+            C_Timer.NewTicker(1, function() 
+                icdDuration = icdDuration - 1
+                TimerText:SetText(icdDuration)
+            end, fields.internalCooldown)
+            C_Timer.After(fields.internalCooldown + 0.25, function()
+                TimerText:SetText("")
+                TrackerFrame:SetAlpha(1)
+            end)
         end
+        
     end
 
 	if fields.position then
@@ -19,7 +37,7 @@ local function Tracker (fields)
 			fields.position.offsetY
 		)
 	else 
-		Tracker:SetPoint("CENTER", 0, 0)
+		TrackerFrame:SetPoint("CENTER", 0, 0)
 	end
     TrackerFrame:EnableMouse(true)
     TrackerFrame:SetResizable(true)
@@ -31,7 +49,6 @@ local function Tracker (fields)
         edgeSize = 2,
     })
     TrackerFrame:SetBackdropBorderColor(0, 0, 0, 1)
-    TrackerFrame.tooltip = "Example:\n\nDarkmoon Card: Death\nBandit's Insignia\nExtract of Necromantic Power\n...";
 
     local TrackerTexture = TrackerFrame:CreateTexture(nil, "BACKGROUND")
     TrackerTexture:SetAllPoints(TrackerFrame)
@@ -52,7 +69,7 @@ local function Tracker (fields)
     end)
 
     TrackerFrame:SetScript("OnDragStop", function(self, event, payload)
-		local _, _, _, offsetX, offsetY = Tracker:GetPoint()
+		local _, _, _, offsetX, offsetY = TrackerFrame:GetPoint()
         if event == nil then
             if self:GetWidth() < 25 or self:GetHeight() < 25 then
                 self:SetSize(64, 64)

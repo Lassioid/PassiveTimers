@@ -1,5 +1,4 @@
 local _, Util = ...
-
 local State = {}
 -- ***** FIELD VALUES *****
 -- frameKey
@@ -10,6 +9,16 @@ local State = {}
 -- auraName (buff or aura name)
 -- trackerPosition (offsetX, offsetY)
 -- trackerSize
+
+SlashCmdList["TRACKERTOGGLE"] = function(msg)
+	if TrackerConfig:IsVisible() == false then
+		TrackerConfig:Show()
+	else 
+		TrackerConfig:Hide()
+	end
+end
+
+SLASH_TRACKERTOGGLE1 = "/icd"
 
 local function ParseHyperLink (str)
     local hyperLinkStr = str:gsub("|", "||");
