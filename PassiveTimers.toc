@@ -1,0 +1,16 @@
+## Interface: 30401
+## Version: 0.3.5
+## Title: PassiveTimers
+## Notes: PassiveTimers
+## Author: LassiKetola
+## X-Min-Interface-Classic: 11304
+## X-Min-Interface-BCC: 20504
+## X-Min-Interface-Wrath: 30401
+## SavedVariables: SavedVars
+
+Util.lua
+Tracker.lua
+TrackerConfig.lua
+TrackerTextInput.lua
+TrackerCheckBox.lua
+TrackerEventListener.lua
